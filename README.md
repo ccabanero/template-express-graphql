@@ -92,4 +92,174 @@ Create a file named ... schema.js
   * The keys are the fields
   * The values are the types
       * The values are objects with __type__ properties using a GraphQL object type
+
+````
+const graphql = require('graphql');
+const {
+    GraphQLObjectType,
+    GraphQLString,
+    GraphQLInt
+} = graphql;
+
+// Defines a User
+const UserType = new GraphQLObjectType({
+    name: 'User',
+    fields: {
+        id: { type: GraphQLString},
+        firstName: { type: GraphQLString },
+        age: { type: GraphQLInt }
+    }
+});
+````
+      
+#### Root Query
+
+* A root query 'jumps into the object graph'.  
+* A root query is an entry point into our data (i.e. object graph).
      
+     
+#### Schema     
+
+Then create a schema object.  The whole schema.js is now: 
+
+````
+const graphql = require('graphql');
+const _ = require('lodash');
+const {
+    GraphQLObjectType,
+    GraphQLString,
+    GraphQLInt,
+    GraphQLSchema
+} = graphql;
+
+// Temporary hard-coded Users as a data-store
+const users = [
+    { id: '23', firstName: 'Bill', age: 20 },
+    { id: '47', firstName: 'Samantha', age: 21 }
+];
+
+// Defines a User
+const UserType = new GraphQLObjectType({
+    name: 'User',
+    fields: {
+        id: { type: GraphQLString},
+        firstName: { type: GraphQLString },
+        age: { type: GraphQLInt }
+    }
+});
+
+// The root query is an entry point into our object graph.
+const RootQuery = new GraphQLObjectType({
+    name: 'RootQueryType',
+    fields: {
+        user: {
+            type: UserType,
+            args: { 
+                id: { 
+                    type: GraphQLString 
+                } 
+            },
+            resolve(parentValue, args) {
+                // go into datastore and find the data we're looking for
+                return _.find(users, { id: args.id });
+            }
+        }
+    }
+});
+
+module.exports = new GraphQLSchema({
+    query: RootQuery,
+});
+
+````
+
+Now update app.js to use the schema: 
+
+````
+const express = require('express');
+const expressGraphQL = require('express-graphql');
+const schema = require('./schema/schema');
+
+const app = express();
+
+app.use('/graphql', expressGraphQL({
+    schema: schema,
+    graphiql: true
+}));
+
+app.listen(4000, () => {
+
+    console.log('Listening on port 4000');
+});
+````
+
+#### GraphiQL 
+
+Go to app in browser and query for a user with:
+
+````
+{
+  user(id:"23") {
+    id, 
+    firstName,
+    age
+  }
+}
+````
+
+* It says, look through Users, find User with id '23'.  When found, we ask for the three passed fields of interest.
+* Changing the id will change the user.
+* Changing the properties will allow for not over-fetching data not needed.
+* Note, if id doesn't exist, we simply get null! :)
+* Note, if no required id parameter is provided - it informs in response.
+
+#### DataStore
+
+Make a fake dev API with ...
+
+````
+npm install --save json-server
+````
+
+Then make db.json as the data 
+
+````
+{
+    "users": [
+        { "id": "23", "firstName": "Bill", "age": 20 },
+        { "id": "40", "firstName": "Alex", "age": 40 }
+    ]
+}
+````
+
+Then start this server and add a helper script in package.json: 
+
+````
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1", 
+    "json:server": "json-server --watch db.json" // <!-- ADDED THIS
+  },
+````
+
+Now run in a new Terminal tab with:
+
+````
+npm run json:server
+````
+
+Then visit in the brower localhost:3000/users and see:
+
+````
+[
+  {
+    "id": "23",
+    "firstName": "Bill",
+    "age": 20
+  },
+  {
+    "id": "40",
+    "firstName": "Alex",
+    "age": 40
+  }
+]
+````
