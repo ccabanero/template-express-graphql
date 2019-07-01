@@ -51,3 +51,45 @@ app.listen(4000, () => {
 });
 ````
 
+Hooke up GraphQL with Express
+
+````
+const express = require('express');
+const expressGraphQL = require('express-graphql');
+
+const app = express();
+
+app.use('/graphql', expressGraphQL({
+    graphiql: true
+}));
+
+app.listen(4000, () => {
+
+    console.log('Listening on port 4000');
+});
+````
+
+Run the Express app.
+
+````
+node server.js
+````
+
+Then use Browser and navigate to:
+
+````
+http://localhost:4000/graphql
+````
+
+## GraphQL Schema
+
+A schema is needed to define the data structures in the graph.
+
+Create a file named ... schema.js
+
+* All GraphQLObjectTypes require a __name__ property - a string.
+* All GraphQLObjectTypes reuqire a __fields__ property - an object.
+  * The keys are the fields
+  * The values are the types
+      * The values are objects with __type__ properties using a GraphQL object type
+     
