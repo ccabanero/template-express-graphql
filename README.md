@@ -75,6 +75,12 @@ Run the Express app.
 node server.js
 ````
 
+nodemon was installed so you should nos run the express app with:
+
+````
+node run dev // calls nodemon then runs server.js
+````
+
 Then use Browser and navigate to:
 
 ````
@@ -213,9 +219,9 @@ Go to app in browser and query for a user with:
 * Note, if id doesn't exist, we simply get null! :)
 * Note, if no required id parameter is provided - it informs in response.
 
-#### DataStore
+## DataStore
 
-Make a fake dev API with ...
+We use a fake API instead hard-coding data in schema ...
 
 ````
 npm install --save json-server
@@ -226,8 +232,13 @@ Then make db.json as the data
 ````
 {
     "users": [
-        { "id": "23", "firstName": "Bill", "age": 20 },
-        { "id": "40", "firstName": "Alex", "age": 40 }
+        { "id": "23", "firstName": "Bill", "age": 20, "companyId": "1" },
+        { "id": "40", "firstName": "Alex", "age": 40, "companyId": "2" },
+        { "id": "41", "firstName": "Nick", "age": 44, "companyId": "2" }
+    ],
+    "companies": [
+        { "id": "1", "name": "Apple", "description": "iphone" },
+        { "id": "2", "name": "Google", "description": "search" }
     ]
 }
 ````
@@ -264,7 +275,7 @@ Then visit in the brower localhost:3000/users and see:
 ]
 ````
 
-## Async Resolves
+## Schema Update
 
 Install axios (alternative to fetch) with:
 

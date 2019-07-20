@@ -7,13 +7,30 @@ const {
     GraphQLSchema
 } = graphql;
 
+// Defines a Company
+const CompanyType = new GraphQLObjectType({
+    name: 'Company',
+    fields: {
+        id: { type: GraphQLString },
+        name: { type: GraphQLString },
+        description: { type: GraphQLString }
+    }
+});
+
 // Defines a User
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: {
-        id: { type: GraphQLString},
+        id: { type: GraphQLString },
         firstName: { type: GraphQLString },
-        age: { type: GraphQLInt }
+        age: { type: GraphQLInt },
+        company: {
+            type: CompanyType,
+            resolve(parentValue, args) {
+                return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
+                .then(res => res.data);
+            }
+        }
     }
 });
 
