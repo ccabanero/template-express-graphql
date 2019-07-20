@@ -5,7 +5,8 @@ const {
     GraphQLString,
     GraphQLInt,
     GraphQLSchema,
-    GraphQLList
+    GraphQLList,
+    GraphQLNonNull
 } = graphql;
 
 // Defines a Company
@@ -41,8 +42,14 @@ const UserType = new GraphQLObjectType({
     })
 });
 
-// The root query is an entry point into our object graph.
-const RootQuery = new GraphQLObjectType({
+// The RootQuery type is an entry point into our object graph.
+// client can query 'user'
+//      pass in the user id
+//      you will be returned a UserType
+// client can query 'company'
+//      pass in company id
+//      you will be returned a Company Type
+const rootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
         user: {
@@ -54,7 +61,7 @@ const RootQuery = new GraphQLObjectType({
             },
             resolve(parentValue, args) {
                 return axios.get(`http://localhost:3000/users/${args.id}`)
-                    .then(response => response.data);
+                    .then(res => res.data);
             }
         },
         company: {
@@ -65,12 +72,63 @@ const RootQuery = new GraphQLObjectType({
                 }
             },
             resolve(parentValue, args) {
-                return axios.get(`http://localhost:3000/companies/${args.id}`).then(response => response.data);
+                return axios.get(`http://localhost:3000/companies/${args.id}`)
+                .then(res => res.data);
             }
         }
     }
 });
 
+// The Mutation type lets us change types that represent our data entities
+// client can addUser
+//      pass in firstName, age, companyId
+//      you will be returned a new UserType
+const rootMutation = new GraphQLObjectType({
+    name: 'RootMutationType',
+    fields: {
+        addUser: {
+            type: UserType,
+            args: {
+                firstName: { type: new GraphQLNonNull(GraphQLString) },
+                age: { type: new GraphQLNonNull(GraphQLInt) },
+                companyId: { type: GraphQLString }
+            },
+            resolve(parentValue, { firstName, age, companyId}) {
+                return axios.post('http://localhost:3000/users/', {
+                    firstName,
+                    age
+                }).then(res => res.data);
+            }
+        },
+        deleteUser: {
+            type: UserType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLString) }
+            },
+            resolve(parentValue, { id }) {
+                return axios.delete(`http://localhost:3000/users/${id}`)
+                .then(res => res.data);
+            }
+        },
+        editUser: {
+            type: UserType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLString) },
+                firstName: { type: GraphQLString },
+                age: { type: GraphQLInt },
+                companyId: { type: GraphQLString }
+            }, 
+            resolve(parentValue, { id, firstName, age, companyId }) {
+                return axios.patch(`http://localhost:3000/users/${id}`, {
+                    id, firstName, age, companyId 
+                }).then(res => res.data);
+            }
+        }
+    }
+});
+
+// The Schema - this is passed to our Express app
 module.exports = new GraphQLSchema({
-    query: RootQuery,
+    query: rootQuery,
+    mutation: rootMutation
 });

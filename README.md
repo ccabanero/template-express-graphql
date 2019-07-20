@@ -16,6 +16,9 @@ __Express/GraphQL Server__
 
 * Express for handling HTTP request/responses
 * GraphQL library
+	* GraphQLObjectTypes that represent business objects and relationships.
+	* RootQuery type for querying/navigating the object graph.
+	* Mutation type for creating/editing/deleting object from our object graph.
 
 __Data Store__
 
@@ -143,6 +146,8 @@ Create a file named ... schema.js
   * The values are the types
       * The values are objects with __type__ properties using a GraphQL object type
 
+Example...
+
 ````
 const graphql = require('graphql');
 const {
@@ -166,7 +171,10 @@ const UserType = new GraphQLObjectType({
 
 * A root query 'jumps into the object graph'.  
 * The root query type provides us multiple access points to the object graph (e.g. start querying from user, start querying from company)
-* We define the name of the field we can query, the input arguments, and then define how to resolve to another object in the graph when executing the query
+* The root query lets us know how to query by providing:
+	*  the name of the field we can query
+	*  the input arguments required
+	*  the resolve function to navigate to another type
      
      
 #### Resolve Functions   
@@ -180,12 +188,12 @@ Common cases are:
 
 In this sample, the resolve function implementation uses async http calls to our fake API.
 
-Install axios (alternative to fetch) with:
+#### Mutations
 
-````
-npm install --save axios
-````
-We use axios to make async calls to our dev json server.  
+Mutations are a separate object from our types.  This is used to CRUD types in our object graph.
+
+
+#### Schema
 
 ````
 const graphql = require('graphql');
@@ -284,6 +292,8 @@ Use the GraphiQL client by going to:
 http://localhost:4000/graphql
 ````
 
+Note the free docs!!!
+
 Query for a user:
 
 ````
@@ -301,7 +311,7 @@ Query for a user:
 }
 ````
 
-Alterantively, create a named query
+Alterantively, create a named query (useful for client-side use).
 
 ````
 query findUser {
@@ -402,7 +412,7 @@ Build custom objects:
   }
 }
 ````
-retuns 
+returns 
 
 ````
 {
@@ -440,7 +450,90 @@ fragment companyDetails on Company {
 }
 ````
 
+Mutate to create a new user:
 
+````
+mutation {
+  addUser(firstName: "Stephen", age: 26) {
+    id
+    firstName
+    age
+  }
+}
+````
 
+returns:
 
+````
+{
+  "data": {
+    "addUser": {
+      "id": "W6BqeAG",
+      "firstName": "Stephen",
+      "age": 26
+    }
+  }
+}
+````
 
+Mutate to delete a user:
+
+````
+mutation {
+  deleteUser(id:"K2_HKl-") {
+    firstName,
+    age
+  }
+}
+````
+
+returns:
+
+````
+{
+  "data": {
+    "deleteUser": {
+      "firstName": null,
+      "age": null
+    }
+  }
+}
+````
+
+You can also confirm deletion by hitting the fake REST API: http://localhost:3000/users
+
+Mutate to edit a user (i.e. patch by only updating optional passed in values):
+
+````
+mutation {
+  editUser(id:"jIMhy-p", age: 23, companyId: "1") {
+    id,
+    firstName,
+    age
+    company {
+      id,
+      name,
+      description
+    }
+  }
+}
+````
+
+returns:
+
+````
+{
+  "data": {
+    "editUser": {
+      "id": "jIMhy-p",
+      "firstName": "Stephen",
+      "age": 23,
+      "company": {
+        "id": "1",
+        "name": "Apple",
+        "description": "iphone"
+      }
+    }
+  }
+}
+````
