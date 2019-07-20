@@ -9,16 +9,24 @@ Notes for the course 'GraphQL with React: the Complete Developers Guide' from Ud
 
 __Web Page__
 
-* GraphiQL
+* GraphiQL 
 
+or
+
+* React app
+* GraphQL client
+	* Apollo Client
+	* Relay (used by Facebook team)
 
 __Express/GraphQL Server__
 
 * Express for handling HTTP request/responses
-* GraphQL library
+* Express-GraphQL library
 	* GraphQLObjectTypes that represent business objects and relationships.
 	* RootQuery type for querying/navigating the object graph.
 	* Mutation type for creating/editing/deleting object from our object graph.
+
+Note as an alterantive on the server is Apollo Server.
 
 __Data Store__
 
@@ -537,3 +545,5 @@ returns:
   }
 }
 ````
+
+Note: In ChromeDev tools, view network tab to see the POST Request parameters.

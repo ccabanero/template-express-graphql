@@ -49,7 +49,7 @@ const UserType = new GraphQLObjectType({
 // client can query 'company'
 //      pass in company id
 //      you will be returned a Company Type
-const rootQuery = new GraphQLObjectType({
+const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
         user: {
@@ -83,7 +83,7 @@ const rootQuery = new GraphQLObjectType({
 // client can addUser
 //      pass in firstName, age, companyId
 //      you will be returned a new UserType
-const rootMutation = new GraphQLObjectType({
+const RootMutation = new GraphQLObjectType({
     name: 'RootMutationType',
     fields: {
         addUser: {
@@ -129,6 +129,6 @@ const rootMutation = new GraphQLObjectType({
 
 // The Schema - this is passed to our Express app
 module.exports = new GraphQLSchema({
-    query: rootQuery,
-    mutation: rootMutation
+    query: RootQuery,
+    mutation: RootMutation
 });
