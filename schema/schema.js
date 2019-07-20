@@ -4,23 +4,30 @@ const {
     GraphQLObjectType,
     GraphQLString,
     GraphQLInt,
-    GraphQLSchema
+    GraphQLSchema,
+    GraphQLList
 } = graphql;
 
 // Defines a Company
 const CompanyType = new GraphQLObjectType({
     name: 'Company',
-    fields: {
+    fields: () => ({
         id: { type: GraphQLString },
         name: { type: GraphQLString },
-        description: { type: GraphQLString }
-    }
+        description: { type: GraphQLString },
+        users: {
+            type: new GraphQLList(UserType),
+            resolve(parentValue, args) {
+                return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`).then(res => res.data);
+            }
+        }
+    })
 });
 
 // Defines a User
 const UserType = new GraphQLObjectType({
     name: 'User',
-    fields: {
+    fields: () => ({
         id: { type: GraphQLString },
         firstName: { type: GraphQLString },
         age: { type: GraphQLInt },
@@ -31,7 +38,7 @@ const UserType = new GraphQLObjectType({
                 .then(res => res.data);
             }
         }
-    }
+    })
 });
 
 // The root query is an entry point into our object graph.
@@ -46,9 +53,19 @@ const RootQuery = new GraphQLObjectType({
                 } 
             },
             resolve(parentValue, args) {
-                // go into datastore and find the data we're looking for
                 return axios.get(`http://localhost:3000/users/${args.id}`)
                     .then(response => response.data);
+            }
+        },
+        company: {
+            type: CompanyType,
+            args: {
+                id: {
+                    type: GraphQLString
+                }
+            },
+            resolve(parentValue, args) {
+                return axios.get(`http://localhost:3000/companies/${args.id}`).then(response => response.data);
             }
         }
     }

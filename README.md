@@ -136,7 +136,7 @@ Create a file named ... schema.js
 
 #### GraphQLObjectType
 
-* Each entity in data model is a GraphQLObjecType
+* Each entity in data model is declared as a GraphQLObjecType
 * All GraphQLObjectTypes require a __name__ property - a string.
 * All GraphQLObjectTypes reuqire a __fields__ property - an object.
   * The keys are the fields
@@ -165,10 +165,20 @@ const UserType = new GraphQLObjectType({
 #### Root Query
 
 * A root query 'jumps into the object graph'.  
-* A root query is an entry point into our data (i.e. object graph).
+* The root query type provides us multiple access points to the object graph (e.g. start querying from user, start querying from company)
+* We define the name of the field we can query, the input arguments, and then define how to resolve to another object in the graph when executing the query
      
      
-#### Async Resolvers     
+#### Resolve Functions   
+
+Resolve functions let us navigate from one GraphQLObjectType to another.  
+
+Common cases are:
+
+* When querying ... going from a RootQuery type to UserType.
+* Object relationships ... from User type to Company type.  Going from Company type to list of User types
+
+In this sample, the resolve function implementation uses async http calls to our fake API.
 
 Install axios (alternative to fetch) with:
 
@@ -184,23 +194,30 @@ const {
     GraphQLObjectType,
     GraphQLString,
     GraphQLInt,
-    GraphQLSchema
+    GraphQLSchema,
+    GraphQLList
 } = graphql;
 
 // Defines a Company
 const CompanyType = new GraphQLObjectType({
     name: 'Company',
-    fields: {
+    fields: () => ({
         id: { type: GraphQLString },
         name: { type: GraphQLString },
-        description: { type: GraphQLString }
-    }
+        description: { type: GraphQLString },
+        users: {
+            type: new GraphQLList(UserType),
+            resolve(parentValue, args) {
+                return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`).then(res => res.data);
+            }
+        }
+    })
 });
 
 // Defines a User
 const UserType = new GraphQLObjectType({
     name: 'User',
-    fields: {
+    fields: () => ({
         id: { type: GraphQLString },
         firstName: { type: GraphQLString },
         age: { type: GraphQLInt },
@@ -211,7 +228,7 @@ const UserType = new GraphQLObjectType({
                 .then(res => res.data);
             }
         }
-    }
+    })
 });
 
 // The root query is an entry point into our object graph.
@@ -226,9 +243,19 @@ const RootQuery = new GraphQLObjectType({
                 } 
             },
             resolve(parentValue, args) {
-                // go into datastore and find the data we're looking for
                 return axios.get(`http://localhost:3000/users/${args.id}`)
                     .then(response => response.data);
+            }
+        },
+        company: {
+            type: CompanyType,
+            args: {
+                id: {
+                    type: GraphQLString
+                }
+            },
+            resolve(parentValue, args) {
+                return axios.get(`http://localhost:3000/companies/${args.id}`).then(response => response.data);
             }
         }
     }
@@ -237,6 +264,7 @@ const RootQuery = new GraphQLObjectType({
 module.exports = new GraphQLSchema({
     query: RootQuery,
 });
+
 ````
 
 Now that we have defined the GraphQL schema for our Express app ...
@@ -256,7 +284,7 @@ Use the GraphiQL client by going to:
 http://localhost:4000/graphql
 ````
 
-Go to app in browser and query for a user with:
+Query for a user:
 
 ````
 {
@@ -273,11 +301,146 @@ Go to app in browser and query for a user with:
 }
 ````
 
-* It says, look through Users, find User with id '23'.  When found, we ask for the three passed fields of interest.
+Alterantively, create a named query
+
+````
+query findUser {
+  user(id:"40") {
+    id, 
+    firstName,
+    age
+    company {
+      id,
+      name,
+      description
+    }
+  }
+}
+````
+
+both variations retuns:
+
+````
+{
+  "data": {
+    "user": {
+      "id": "40",
+      "firstName": "Alex",
+      "age": 40,
+      "company": {
+        "id": "2",
+        "name": "Google",
+        "description": "search"
+      }
+    }
+  }
+}
+````
+
+* It says, look through Users, find User with id '40'.  When found, we ask for the four passed fields of interest.
 * Changing the id will change the user.
 * Changing the properties will allow for not over-fetching data not needed.
 * Note, if id doesn't exist, we simply get null! :)
 * Note, if no required id parameter is provided - it informs in response.
+
+Query of a company:
+
+````
+{
+  company(id:"2") {
+    id,
+    name,
+    description,
+    users {
+      id,
+      firstName,
+      age
+    }
+  }
+}
+````
+
+returns: 
+
+````
+{
+  "data": {
+    "company": {
+      "id": "2",
+      "name": "Google",
+      "description": "search",
+      "users": [
+        {
+          "id": "40",
+          "firstName": "Alex",
+          "age": 40
+        },
+        {
+          "id": "41",
+          "firstName": "Nick",
+          "age": 44
+        }
+      ]
+    }
+  }
+}
+````
+
+Build custom objects:
+
+````
+{
+  apple: company(id:"1"){
+    id
+    name
+    description
+  }
+  google: company(id:"2") {
+    id
+    name
+    description
+  }
+}
+````
+retuns 
+
+````
+{
+  "data": {
+    "apple": {
+      "id": "1",
+      "name": "Apple",
+      "description": "iphone"
+    },
+    "company": {
+      "id": "2",
+      "name": "Google",
+      "description": "search"
+    }
+  }
+}
+````
+
+Use fragments as an alterantive to the above:
+
+````
+{
+  apple: company(id:"1"){
+    ...companyDetails
+  }
+  google: company(id:"2") {
+    ...companyDetails
+  }
+}
+
+fragment companyDetails on Company {
+  id
+  name
+  description
+}
+````
+
+
 
 
 
