@@ -365,7 +365,7 @@ Query Author:
     first_name, 
     last_name, 
     books {
-        id,
+      id,
       title,
       description,
       image_url
@@ -373,6 +373,13 @@ Query Author:
   }
 }
 ````
+
+* It says, find Author with id '1'.  
+* When found, we want the id, first_name, last_name, and list of books returned.
+* Changing the id will change the user.
+* Changing the properties will allow for not over-fetching data not needed.
+* Note, if id doesn't exist, we simply get null! :)
+* Note, if no required id parameter is provided - it informs in response.
 
 Returns:
 
@@ -449,155 +456,70 @@ Returns:
 Note: In ChromeDev tools, view network tab to see the POST Request parameters.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Query for a user:
+Build custom objects with multiople queries!!!!!!
 
 ````
 {
-  user(id:"40") {
-    id, 
-    firstName,
-    age
-    company {
-      id,
-      name,
-      description
+  wendig: author(id:1) {
+    books {
+        id,
+        title,
+        description,
+        image_url
+    }
+  },
+  johnston: author(id:2){
+    books{
+        id,
+        title,
+        description,
+        image_url 
     }
   }
 }
 ````
-
-Alterantively, create a named query (useful for client-side use).
-
-````
-query findUser {
-  user(id:"40") {
-    id, 
-    firstName,
-    age
-    company {
-      id,
-      name,
-      description
-    }
-  }
-}
-````
-
-both variations retuns:
+Returns:
 
 ````
 {
   "data": {
-    "user": {
-      "id": "40",
-      "firstName": "Alex",
-      "age": 40,
-      "company": {
-        "id": "2",
-        "name": "Google",
-        "description": "search"
-      }
-    }
-  }
-}
-````
-
-* It says, look through Users, find User with id '40'.  When found, we ask for the four passed fields of interest.
-* Changing the id will change the user.
-* Changing the properties will allow for not over-fetching data not needed.
-* Note, if id doesn't exist, we simply get null! :)
-* Note, if no required id parameter is provided - it informs in response.
-
-Query of a company:
-
-````
-{
-  company(id:"2") {
-    id,
-    name,
-    description,
-    users {
-      id,
-      firstName,
-      age
-    }
-  }
-}
-````
-
-returns: 
-
-````
-{
-  "data": {
-    "company": {
-      "id": "2",
-      "name": "Google",
-      "description": "search",
-      "users": [
+    "wendig": {
+      "books": [
         {
-          "id": "40",
-          "firstName": "Alex",
-          "age": 40
+          "id": 1,
+          "title": "Aftermath",
+          "description": "As the Empire reels from its critical defeats at the Battle of Endor, the Rebel Alliance - now a fledgling New Republic - presses its advantage by hunting down the enemy's scattered forces before they can regroup and retaliate.",
+          "image_url": "http://someurl/aftermath.png"
         },
         {
-          "id": "41",
-          "firstName": "Nick",
-          "age": 44
+          "id": 2,
+          "title": "Life Debt",
+          "description": "The Emperor is dead, and the remnants of his former Empire are in retreat. As the New Republic fights to restore a lasting peace to the galaxy, some dare to imagine new beginnings and new destinies.  For Han Solo ...",
+          "image_url": "http://someurl/life_debt.png"
+        },
+        {
+          "id": 3,
+          "title": "Empire's End",
+          "description": "The Battle of Endor shattered the Empire, scattering its remaining forces across the galaxy. But the months following the Rebellion's victory have not been easy. The fledgling New Republic has suffered a devasting attack ...",
+          "image_url": "http://someurl/empires_end.png"
         }
       ]
-    }
-  }
-}
-````
-
-Build custom objects:
-
-````
-{
-  apple: company(id:"1"){
-    id
-    name
-    description
-  }
-  google: company(id:"2") {
-    id
-    name
-    description
-  }
-}
-````
-returns 
-
-````
-{
-  "data": {
-    "apple": {
-      "id": "1",
-      "name": "Apple",
-      "description": "iphone"
     },
-    "company": {
-      "id": "2",
-      "name": "Google",
-      "description": "search"
+    "johnston": {
+      "books": [
+        {
+          "id": 4,
+          "title": "Ahsoka",
+          "description": "Ahsoka Tano, once a loyal Jedi apprentice to Anakin Skywalker, planned to spend her life serving the Jedi Order. But after a heartbreaking betrayal, she turned her back on the Order to forge her own path, knowing Anakin ...",
+          "image_url": "http://someurl/ashoka.png"
+        },
+        {
+          "id": 5,
+          "title": "Queen's Shadow",
+          "description": "When Padme Amidala steps down from her position as Queen of Naboo, she is ready to set aside her title and return to life out of the spotlight.  But to her surprise, the new queen asks Padme to continue serving their people ...",
+          "image_url": "http://someurl/queens_shadow.png"
+        }
+      ]
     }
   }
 }
@@ -622,90 +544,80 @@ fragment companyDetails on Company {
 }
 ````
 
-Mutate to create a new user:
+Mutate to create a new author:
 
 ````
 mutation {
-  addUser(firstName: "Stephen", age: 26) {
-    id
-    firstName
-    age
-  }
-}
-````
-
-returns:
-
-````
-{
-  "data": {
-    "addUser": {
-      "id": "W6BqeAG",
-      "firstName": "Stephen",
-      "age": 26
-    }
-  }
-}
-````
-
-Mutate to delete a user:
-
-````
-mutation {
-  deleteUser(id:"K2_HKl-") {
-    firstName,
-    age
-  }
-}
-````
-
-returns:
-
-````
-{
-  "data": {
-    "deleteUser": {
-      "firstName": null,
-      "age": null
-    }
-  }
-}
-````
-
-You can also confirm deletion by hitting the fake REST API: http://localhost:3000/users
-
-Mutate to edit a user (i.e. patch by only updating optional passed in values):
-
-````
-mutation {
-  editUser(id:"jIMhy-p", age: 23, companyId: "1") {
+  addAuthor(first_name: "Claudia", last_name: "Gray") {
     id,
-    firstName,
-    age
-    company {
-      id,
-      name,
-      description
-    }
+    first_name,
+    last_name
   }
 }
 ````
-
-returns:
+Returns:
 
 ````
 {
   "data": {
-    "editUser": {
-      "id": "jIMhy-p",
-      "firstName": "Stephen",
-      "age": 23,
-      "company": {
-        "id": "1",
-        "name": "Apple",
-        "description": "iphone"
-      }
+    "addAuthor": {
+      "id": 10,
+      "first_name": "Claudia",
+      "last_name": "Gray"
     }
   }
 }
 ````
+
+Mutate to delete an author:
+
+````
+mutation {
+  deleteAuthor(id:4) {
+    id, 
+    first_name,
+    last_name
+  }
+}
+````
+
+Returns: 
+
+````
+{
+  "data": {
+    "deleteAuthor": {
+      "id": 4,
+      "first_name": "Clint",
+      "last_name": "Gray"
+    }
+  }
+}
+````
+
+## Unit Testing GraphQL Queries and Mutations
+
+* TODO
+
+
+## JSON Web Tokens with GraphQL
+
+* TODO
+
+## Deploying GraphQL server to Heroku
+
+* TODO
+ 
+## Using GraphQL with React Web App
+
+* TODO
+
+
+## Using GraphQL with native iOS App
+
+* TODO
+
+## Using GraphQL with native iOS App
+
+* TODO
+
