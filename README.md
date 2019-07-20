@@ -80,9 +80,9 @@ VALUES (2, 'Queen''s Shadow', 'When Padme Amidala steps down from her position a
 
 ````
 
-#### Create a PostgreSQL Adapter
+#### Create a PostgreSQL Adaptor
 
-Create pgAdapter.js at the root of the project.  It should contain:
+Create pgAdaptor.js at the root of the project.  It should contain:
 
 ````
 require('dotenv').config()
@@ -100,7 +100,7 @@ const config = {
 
 const db = pgp(config);
 
-// test db connection via ... node pgAdapter.js
+// test db connection via ... node pgAdaptor.js
 db.one('select title from book where id=1')
 .then(res => {
     console.log(res);
