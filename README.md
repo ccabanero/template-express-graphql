@@ -82,7 +82,7 @@ VALUES (2, 'Queen''s Shadow', 'When Padme Amidala steps down from her position a
 
 #### Create a PostgreSQL Adaptor
 
-Create pgAdaptor.js at the root of the project.  It should contain:
+Create pgAdaptor.js at the root of the project with ...
 
 ````
 require('dotenv').config()
@@ -100,19 +100,21 @@ const config = {
 
 const db = pgp(config);
 
-// test db connection via ... node pgAdaptor.js
+/*
+// test db connection
 db.one('select title from book where id=1')
 .then(res => {
     console.log(res);
 }, (e) => {
     console.log(e)
 });
+*/
 
 exports.db = db;
 
 ````
 
-Create a .env file at the root of the project.  It should contain your connection info
+Create a .env file at the root of the project.  It should contain your connection info.
 
 Add the .env (and any .env.dev, .denv.prod, etc.) in your .gitignore file.
 
@@ -141,9 +143,9 @@ Create a directory named schema with the following:
 
 #### Type
 
-* Each entity in data model is declared as a GraphQLObjecType
+* Each entity in data model is declared as a GraphQLObjectType
 * All GraphQLObjectTypes require a __name__ property - a string.
-* All GraphQLObjectTypes reuqire a __fields__ property - an object.
+* All GraphQLObjectTypes reuqire a __fields__ property - an object (or arrow function when using related objects)
   * The keys are the fields
   * The values are the types
       * The values are objects with __type__ properties using a GraphQL object type
@@ -209,13 +211,12 @@ exports.BookType = BookType;
 ````
       
 #### Query
-
-* A root query 'jumps into the object graph'.  
+ 
 * The root query type provides us multiple access points to the object graph (e.g. start querying from user, start querying from company)
 * The root query lets us know how to query by providing:
 	*  the name of the field we can query
 	*  the input arguments required
-	*  the resolve function to navigate to another type
+	*  the resolve function used to navigate to another type
 
 Add to /schema/query.js ...
 
@@ -280,6 +281,10 @@ Mutations are a separate object from our types.  This is used to CRUD types in o
 
 Add to /schema/mutation.js.
 
+````
+TODO
+````
+
 ## Express App - GraphQL
 
 
@@ -292,10 +297,10 @@ npm init
 Then install four packages ...
 
 ````
-npm install --save pg-promise express express-graphql graphql dotenv
+npm install --save pg-promise express express-graphql graphql dotenv nodemon
 ````
 
-Then create server.js in project ...
+Then create server.js ...
 
 ````
 const graphql = require("graphql");
@@ -322,6 +327,22 @@ app.listen(4000, () => {
 });
 ````
 
+Update package.json so that we use nodemon.
+
+````
+{
+  ...
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js"
+  } ...
+````
+
+Run the app (with nodemon):
+
+````
+npm run dev
+````
 
 ## GraphiQL 
 
@@ -333,9 +354,7 @@ http://localhost:4000/graphql
 
 Note the auto-docuemntation (on the right).
 
-
-
-Query Book:
+Query Author:
 
 ````
 {
