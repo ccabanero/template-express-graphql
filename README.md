@@ -25,7 +25,7 @@ __Clients__
 __GraphQL Server__
 
 * Express
-* Express-GraphQL library.  
+* Express-GraphQL 
 
 __Data Store__
 
@@ -112,7 +112,9 @@ exports.db = db;
 
 ````
 
-Create a .env file at the root of the project.  It should contain your actual connection info:
+Create a .env file at the root of the project.  It should contain your connection info
+
+Add the .env (and any .env.dev, .denv.prod, etc.) in your .gitignore file.
 
 ````
 DB_HOST=localhost
@@ -121,6 +123,162 @@ POSTGRES_DB=your_database
 POSTGRES_USER=your_username
 POSTGRES_PASSWORD=your_password
 ````
+
+## GraphQL Schema
+
+A GraphQL schema includes:
+
+* Defining the types in the object graph.
+* Defining how we query the types.
+* Defining how we mutate the types.
+
+Create a directory named schema with the following:
+
+* /schema/types.js 
+* /schema/query.js
+* /schema/mutation.js
+
+
+#### Type
+
+* Each entity in data model is declared as a GraphQLObjecType
+* All GraphQLObjectTypes require a __name__ property - a string.
+* All GraphQLObjectTypes reuqire a __fields__ property - an object.
+  * The keys are the fields
+  * The values are the types
+      * The values are objects with __type__ properties using a GraphQL object type
+
+Add /schema/types.js ...
+
+````
+const { db } = require('../pgAdaptor');
+const graphql = require('graphql');
+const {
+    GraphQLObjectType,
+    GraphQLString,
+    GraphQLInt,
+    GraphQLList
+} = graphql;
+
+
+// Defines an Book
+const BookType = new GraphQLObjectType({
+    name: 'Book',
+    fields: () => ({
+        id: { type: GraphQLInt },
+        title: { type: GraphQLString },
+        description: { type: GraphQLString },
+        image_url: { type: GraphQLString },
+        author: {
+            type: AuthorType,
+            resolve(parentValue, args) {
+                const query = `SELECT * FROM author WHERE id=$1`;
+                const param = [parentValue.id];
+
+                return db.one(query, param)
+                    .then(res => res)
+                    .catch(err => err);
+            }
+        }
+    })
+});
+
+// Defines an Author
+const AuthorType = new GraphQLObjectType({
+    name: 'Author',
+    fields: () => ({
+        id: { type: GraphQLInt },
+        first_name: { type: GraphQLString },
+        last_name: { type: GraphQLString },
+        books: {
+            type: new GraphQLList(BookType),
+            resolve(parentValue, args) {
+                const query = `SELECT * FROM book WHERE id=$1`;
+                const param = [parentValue.id];
+
+                return db.many(query, param)
+                    .then(res => res)
+                    .catch(err => err);
+            }
+        }
+    })
+});
+
+exports.AuthorType = AuthorType;
+exports.BookType = BookType;
+````
+      
+#### Query
+
+* A root query 'jumps into the object graph'.  
+* The root query type provides us multiple access points to the object graph (e.g. start querying from user, start querying from company)
+* The root query lets us know how to query by providing:
+	*  the name of the field we can query
+	*  the input arguments required
+	*  the resolve function to navigate to another type
+
+Add to /schema/query.js ...
+
+````
+const { db } = require("../pgAdaptor");
+const graphql = require('graphql');
+const {
+    GraphQLObjectType,
+    GraphQLString,
+    GraphQLInt,
+    GraphQLSchema,
+    GraphQLList,
+    GraphQLNonNull
+} = graphql;
+const { AuthorType, BookType } = require("./types");
+
+const RootQuery = new GraphQLObjectType({
+    name: 'RootQueryType',
+    fields: {
+        author: {
+            type: AuthorType,
+            args: { 
+                id: { 
+                    type: GraphQLInt 
+                } 
+            },
+            resolve(parentValue, args) {
+                const query = `SELECT * FROM author WHERE id=$1`;
+                const param = [args.id];
+
+                return db.one(query, param)
+                    .then(res => res)
+                    .catch(err => err);
+            }
+        },
+        book: {
+            type: BookType,
+            args: {
+                id: {
+                    type: GraphQLInt
+                }
+            },
+            resolve(parentValue, args) {
+                const query = `SELECT * FROM book WHERE id=$1`;
+                const param = [args.id];
+
+                return db.one(query, param)
+                    .then(res => res)
+                    .catch(err => err);
+            }
+        }
+    }
+});
+
+exports.query = RootQuery;
+
+````
+
+#### Mutation
+
+Mutations are a separate object from our types.  This is used to CRUD types in our object graph.
+
+Add to /schema/mutation.js.
 
 ## Express App - GraphQL
 
@@ -137,194 +295,33 @@ Then install four packages ...
 npm install --save pg-promise express express-graphql graphql dotenv
 ````
 
-Then create server.js in project. I server.js scaffold a basic Express app ...
-
-
-````
-const express = require('express');
-
-const app = express();
-
-app.listen(4000, () => {
-
-    console.log('Listening on port 4000');
-});
-````
-
-Hooke up GraphQL with Express.
+Then create server.js in project ...
 
 ````
+const graphql = require("graphql");
 const express = require('express');
 const expressGraphQL = require('express-graphql');
-const schema = require('./schema/schema');
+const { GraphQLSchema } = graphql;
+const { query } = require("./schema/query");
+const { mutation } = require("./schema/mutation");
+
+const schema = new GraphQLSchema({
+    query,
+    mutation
+});
 
 const app = express();
 
 app.use('/graphql', expressGraphQL({
-    schema: schema,
+    schema,
     graphiql: true
 }));
 
 app.listen(4000, () => {
-
     console.log('Listening on port 4000');
 });
 ````
 
-Thats all for the base Express app.  Now we'll define the GraphQL Schema.
-
-## GraphQL Schema
-
-A schema is used to define the data structures in the graph and provide how we will query the data.
-
-Create a file named ... schema.js
-
-#### GraphQLObjectType
-
-* Each entity in data model is declared as a GraphQLObjecType
-* All GraphQLObjectTypes require a __name__ property - a string.
-* All GraphQLObjectTypes reuqire a __fields__ property - an object.
-  * The keys are the fields
-  * The values are the types
-      * The values are objects with __type__ properties using a GraphQL object type
-
-Example...
-
-````
-const graphql = require('graphql');
-const {
-    GraphQLObjectType,
-    GraphQLString,
-    GraphQLInt
-} = graphql;
-
-// Defines a User
-const UserType = new GraphQLObjectType({
-    name: 'User',
-    fields: {
-        id: { type: GraphQLString},
-        firstName: { type: GraphQLString },
-        age: { type: GraphQLInt }
-    }
-});
-````
-      
-#### Root Query
-
-* A root query 'jumps into the object graph'.  
-* The root query type provides us multiple access points to the object graph (e.g. start querying from user, start querying from company)
-* The root query lets us know how to query by providing:
-	*  the name of the field we can query
-	*  the input arguments required
-	*  the resolve function to navigate to another type
-     
-     
-#### Resolve Functions   
-
-Resolve functions let us navigate from one GraphQLObjectType to another.  
-
-Common cases are:
-
-* When querying ... going from a RootQuery type to UserType.
-* Object relationships ... from User type to Company type.  Going from Company type to list of User types
-
-In this sample, the resolve function implementation uses async http calls to our fake API.
-
-#### Mutations
-
-Mutations are a separate object from our types.  This is used to CRUD types in our object graph.
-
-
-#### Schema
-
-````
-const graphql = require('graphql');
-const axios = require('axios');
-const {
-    GraphQLObjectType,
-    GraphQLString,
-    GraphQLInt,
-    GraphQLSchema,
-    GraphQLList
-} = graphql;
-
-// Defines a Company
-const CompanyType = new GraphQLObjectType({
-    name: 'Company',
-    fields: () => ({
-        id: { type: GraphQLString },
-        name: { type: GraphQLString },
-        description: { type: GraphQLString },
-        users: {
-            type: new GraphQLList(UserType),
-            resolve(parentValue, args) {
-                return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`).then(res => res.data);
-            }
-        }
-    })
-});
-
-// Defines a User
-const UserType = new GraphQLObjectType({
-    name: 'User',
-    fields: () => ({
-        id: { type: GraphQLString },
-        firstName: { type: GraphQLString },
-        age: { type: GraphQLInt },
-        company: {
-            type: CompanyType,
-            resolve(parentValue, args) {
-                return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
-                .then(res => res.data);
-            }
-        }
-    })
-});
-
-// The root query is an entry point into our object graph.
-const RootQuery = new GraphQLObjectType({
-    name: 'RootQueryType',
-    fields: {
-        user: {
-            type: UserType,
-            args: { 
-                id: { 
-                    type: GraphQLString 
-                } 
-            },
-            resolve(parentValue, args) {
-                return axios.get(`http://localhost:3000/users/${args.id}`)
-                    .then(response => response.data);
-            }
-        },
-        company: {
-            type: CompanyType,
-            args: {
-                id: {
-                    type: GraphQLString
-                }
-            },
-            resolve(parentValue, args) {
-                return axios.get(`http://localhost:3000/companies/${args.id}`).then(response => response.data);
-            }
-        }
-    }
-});
-
-module.exports = new GraphQLSchema({
-    query: RootQuery,
-});
-
-````
-
-Now that we have defined the GraphQL schema for our Express app ...
-
-
-Run the Express app.
-
-````
-node server.js
-````
 
 ## GraphiQL 
 
@@ -334,7 +331,107 @@ Use the GraphiQL client by going to:
 http://localhost:4000/graphql
 ````
 
-Note the free docs!!!
+Note the auto-docuemntation (on the right).
+
+
+
+Query Book:
+
+````
+{
+  author(id:1) {
+    id, 
+    first_name, 
+    last_name, 
+    books {
+    	id,
+      title,
+      description,
+      image_url
+    }
+  }
+}
+````
+
+Returns:
+
+````
+{
+  "data": {
+    "author": {
+      "id": 1,
+      "first_name": "Chuck",
+      "last_name": "Wendig",
+      "books": [
+        {
+          "id": 1,
+          "title": "Aftermath",
+          "description": "As the Empire reels from its critical defeats at the Battle of Endor, the Rebel Alliance - now a fledgling New Republic - presses its advantage by hunting down the enemy's scattered forces before they can regroup and retaliate.",
+          "image_url": "http://someurl/aftermath.png"
+        }
+      ]
+    }
+  }
+}
+````
+
+Query Book:
+
+````
+{
+  book(id: 1){
+    id, 
+    title,
+    description,
+    image_url,
+    author {
+      id,
+      first_name,
+      last_name
+    }
+  }
+}
+````
+
+Returns:
+
+````
+{
+  "data": {
+    "book": {
+      "id": 1,
+      "title": "Aftermath",
+      "description": "As the Empire reels from its critical defeats at the Battle of Endor, the Rebel Alliance - now a fledgling New Republic - presses its advantage by hunting down the enemy's scattered forces before they can regroup and retaliate.",
+      "image_url": "http://someurl/aftermath.png",
+      "author": {
+        "id": 1,
+        "first_name": "Chuck",
+        "last_name": "Wendig"
+      }
+    }
+  }
+}
+````
+
+Note: In ChromeDev tools, view network tab to see the POST Request parameters.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Query for a user:
 
@@ -579,5 +676,3 @@ returns:
   }
 }
 ````
-
-Note: In ChromeDev tools, view network tab to see the POST Request parameters.
