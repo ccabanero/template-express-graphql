@@ -40,10 +40,12 @@ const AuthorType = new GraphQLObjectType({
         books: {
             type: new GraphQLList(BookType),
             resolve(parentValue, args) {
-                const query = `SELECT * FROM book WHERE id=$1`;
+                const query = `SELECT * FROM book WHERE author_id=$1`;
+                console.log(parentValue);
+                console.log(args);
                 const param = [parentValue.id];
 
-                return db.many(query, param)
+                return db.manyOrNone(query, param)
                     .then(res => res)
                     .catch(err => err);
             }

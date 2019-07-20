@@ -2,11 +2,7 @@ const { db } = require("../pgAdaptor");
 const graphql = require('graphql');
 const {
     GraphQLObjectType,
-    GraphQLString,
-    GraphQLInt,
-    GraphQLSchema,
-    GraphQLList,
-    GraphQLNonNull
+    GraphQLInt
 } = graphql;
 const { AuthorType, BookType } = require("./types");
 

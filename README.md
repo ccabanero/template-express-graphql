@@ -195,10 +195,12 @@ const AuthorType = new GraphQLObjectType({
         books: {
             type: new GraphQLList(BookType),
             resolve(parentValue, args) {
-                const query = `SELECT * FROM book WHERE id=$1`;
+                const query = `SELECT * FROM book WHERE author_id=$1`;
+                console.log(parentValue);
+                console.log(args);
                 const param = [parentValue.id];
 
-                return db.many(query, param)
+                return db.manyOrNone(query, param)
                     .then(res => res)
                     .catch(err => err);
             }
@@ -363,7 +365,7 @@ Query Author:
     first_name, 
     last_name, 
     books {
-    	id,
+        id,
       title,
       description,
       image_url
@@ -387,6 +389,18 @@ Returns:
           "title": "Aftermath",
           "description": "As the Empire reels from its critical defeats at the Battle of Endor, the Rebel Alliance - now a fledgling New Republic - presses its advantage by hunting down the enemy's scattered forces before they can regroup and retaliate.",
           "image_url": "http://someurl/aftermath.png"
+        },
+        {
+          "id": 2,
+          "title": "Life Debt",
+          "description": "The Emperor is dead, and the remnants of his former Empire are in retreat. As the New Republic fights to restore a lasting peace to the galaxy, some dare to imagine new beginnings and new destinies.  For Han Solo ...",
+          "image_url": "http://someurl/life_debt.png"
+        },
+        {
+          "id": 3,
+          "title": "Empire's End",
+          "description": "The Battle of Endor shattered the Empire, scattering its remaining forces across the galaxy. But the months following the Rebellion's victory have not been easy. The fledgling New Republic has suffered a devasting attack ...",
+          "image_url": "http://someurl/empires_end.png"
         }
       ]
     }
