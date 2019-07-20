@@ -1,94 +1,128 @@
-# learn-graphQL
+# GraphQL-snippets
 
-Snippets learning GraphQL.
-
-Notes for the course 'GraphQL with React: the Complete Developers Guide' from Udemy.
+Notes and snippets for setting up a GraphQL Server and using it with multiple client platforms.
 
 
-## Architecture
+## Technology Stack
 
-__Web Page__
+This solution using the following technology stack:
 
-* GraphiQL 
+__Clients__
 
-or
-
-* React app
-* GraphQL client
+* GraphiQL
+* React
 	* Apollo Client
-	* Relay (used by Facebook team)
+	* apollo-react
+* iOS native app
+	* apollos-ios
+* Android native app
+	* apollo-android
 
-__Express/GraphQL Server__
+	
 
-* Express for handling HTTP request/responses
-* Express-GraphQL library
-	* GraphQLObjectTypes that represent business objects and relationships.
-	* RootQuery type for querying/navigating the object graph.
-	* Mutation type for creating/editing/deleting object from our object graph.
 
-Note as an alterantive on the server is Apollo Server.
+
+__GraphQL Server__
+
+* Express
+* Express-GraphQL library.  
 
 __Data Store__
 
-* A DB, your REST API, a 3rd party API
+* PostgreSQL
 
-## Data Store
+## Data Store - PostgreSQL
 
-We use a fake API as a data store.  This is what is queried via GraphQL.
+#### Create Tables in PostgreSQL DB
 
-````
-npm install --save json-server
-````
-
-Then make db.json as the data 
+First, create some basic tables.
 
 ````
-{
-    "users": [
-        { "id": "23", "firstName": "Bill", "age": 20, "companyId": "1" },
-        { "id": "40", "firstName": "Alex", "age": 40, "companyId": "2" },
-        { "id": "41", "firstName": "Nick", "age": 44, "companyId": "2" }
-    ],
-    "companies": [
-        { "id": "1", "name": "Apple", "description": "iphone" },
-        { "id": "2", "name": "Google", "description": "search" }
-    ]
-}
+CREATE TABLE author(
+	ID serial PRIMARY KEY,
+    first_name VARCHAR(40),
+    last_name VARCHAR(40)
+);
+
+INSERT INTO author (first_name, last_name)
+VALUES ('Chuck', 'Wendig');
+
+INSERT INTO author (first_name, last_name)
+VALUES ('E. K.', 'Johnston');
 ````
 
-Then start this server and add a helper script in package.json: 
+````
+CREATE TABLE book(
+	ID serial PRIMARY KEY,
+	author_id integer NOT NULL,
+	title VARCHAR (100),
+	description VARCHAR (2500),
+	image_url VARCHAR (255),
+	CONSTRAINT fk_book_author
+		FOREIGN KEY (author_id)
+		REFERENCES author (ID)
+);
+
+INSERT INTO book (author_id, title, description, image_url)
+VALUES (1, 'Aftermath', 'As the Empire reels from its critical defeats at the Battle of Endor, the Rebel Alliance - now a fledgling New Republic - presses its advantage by hunting down the enemy''s scattered forces before they can regroup and retaliate.', 'http://someurl/aftermath.png');
+
+INSERT INTO book (author_id, title, description, image_url)
+VALUES (1, 'Life Debt', 'The Emperor is dead, and the remnants of his former Empire are in retreat. As the New Republic fights to restore a lasting peace to the galaxy, some dare to imagine new beginnings and new destinies.  For Han Solo ...', 'http://someurl/life_debt.png');
+
+INSERT INTO book (author_id, title, description, image_url)
+VALUES (1, 'Empire''s End', 'The Battle of Endor shattered the Empire, scattering its remaining forces across the galaxy. But the months following the Rebellion''s victory have not been easy. The fledgling New Republic has suffered a devasting attack ...', 'http://someurl/empires_end.png');
+
+INSERT INTO book (author_id, title, description, image_url)
+VALUES (2, 'Ahsoka', 'Ahsoka Tano, once a loyal Jedi apprentice to Anakin Skywalker, planned to spend her life serving the Jedi Order. But after a heartbreaking betrayal, she turned her back on the Order to forge her own path, knowing Anakin ...', 'http://someurl/ashoka.png');
+
+INSERT INTO book (author_id, title, description, image_url)
+VALUES (2, 'Queen''s Shadow', 'When Padme Amidala steps down from her position as Queen of Naboo, she is ready to set aside her title and return to life out of the spotlight.  But to her surprise, the new queen asks Padme to continue serving their people ...', 'http://someurl/queens_shadow.png');
 
 ````
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1", 
-    "json:server": "json-server --watch db.json" // <!-- ADDED THIS
-  },
-````
 
-Now run in a new Terminal tab with:
+#### Create a PostgreSQL Adapter
+
+Create pgAdapter.js at the root of the project.  It should contain:
 
 ````
-npm run json:server
+require('dotenv').config()
+const pgPromise = require('pg-promise');
+
+const pgp = pgPromise({});
+
+const config = {
+    host: process.env.POSTGRES_HOST,
+    port: process.env.POSTGRES_PORT,
+    database: process.env.POSTGRES_DB,
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD
+};
+
+const db = pgp(config);
+
+// test db connection via ... node pgAdapter.js
+db.one('select title from book where id=1')
+.then(res => {
+    console.log(res);
+}, (e) => {
+    console.log(e)
+});
+
+exports.db = db;
+
 ````
 
-Then visit in the brower localhost:3000/users and see:
+Create a .env file at the root of the project.  It should contain your actual connection info:
 
 ````
-[
-  {
-    "id": "23",
-    "firstName": "Bill",
-    "age": 20
-  },
-  {
-    "id": "40",
-    "firstName": "Alex",
-    "age": 40
-  }
-]
+DB_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=your_database
+POSTGRES_USER=your_username
+POSTGRES_PASSWORD=your_password
 ````
 
-## GraphQL with Express
+## Express App - GraphQL
 
 
 Initialize a new npm application ...
@@ -100,7 +134,7 @@ npm init
 Then install four packages ...
 
 ````
-npm install --save express express-graphql graphql
+npm install --save pg-promise express express-graphql graphql dotenv
 ````
 
 Then create server.js in project. I server.js scaffold a basic Express app ...
