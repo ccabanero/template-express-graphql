@@ -13,6 +13,8 @@ __Data Store__
 
 ## Data Store - PostgreSQL
 
+GraphQL is not opinionated on what database (RDBMS or NoSQL) you use.  In this template, we use PostgreSQL. 
+
 #### Create Tables in PostgreSQL DB
 
 First, create some basic tables.
@@ -62,7 +64,7 @@ VALUES (2, 'Queen''s Shadow', 'When Padme Amidala steps down from her position a
 
 #### Create a PostgreSQL Adaptor
 
-Create pgAdaptor.js at the root of the project with ...
+Create pgAdaptor.js at the root of the project.  This will allow our Express-GraphQL app to connect to the datbase.
 
 ````
 require('dotenv').config()
@@ -94,9 +96,7 @@ exports.db = db;
 
 ````
 
-Create a .env file at the root of the project.  It should contain your connection info.
-
-Add the .env (and any .env.dev, .denv.prod, etc.) in your .gitignore file.
+Create a .env file at the root of the project.  It should contain your connection info. Add the .env (and any .env.dev, .denv.prod, etc.) in your .gitignore file.
 
 ````
 DB_HOST=localhost
@@ -114,7 +114,7 @@ A GraphQL schema includes:
 * Defining how we query the types.
 * Defining how we mutate the types.
 
-Create a directory named schema with the following:
+Create a directory the following directories and files:
 
 * /schema/types.js 
 * /schema/query.js
@@ -123,7 +123,7 @@ Create a directory named schema with the following:
 
 #### Type
 
-* Each entity in data model is declared as a GraphQLObjectType
+* Each entity in your data model is declared as a GraphQLObjectType
 * All GraphQLObjectTypes require a __name__ property - a string.
 * All GraphQLObjectTypes reuqire a __fields__ property - an object (or arrow function when using related objects)
   * The keys are the fields
@@ -194,11 +194,11 @@ exports.BookType = BookType;
       
 #### Query
  
-* The root query type provides us multiple access points to the object graph (e.g. start querying from user, start querying from company)
+* The root query type provides us multiple access points to the object graph.
 * The root query lets us know how to query by providing:
 	*  the name of the field we can query
 	*  the input arguments required
-	*  the resolve function used to navigate to another type
+	*  what type the resolve function returns
 
 Add to /schema/query.js ...
 
@@ -312,8 +312,11 @@ const RootMutation = new GraphQLObjectType({
 exports.mutation = RootMutation;
 ````
 
+Note, there are many tools that allow you to define your GraphQL schema.
+
 ## Express App - GraphQL
 
+Now that we have a database and GraphQL Schema, we will implement an Express application to allow clients to make queries, mutations, etc.
 
 Initialize a new npm application ...
 
@@ -321,7 +324,7 @@ Initialize a new npm application ...
 npm init
 ````
 
-Then install four packages ...
+Install the following packages ...
 
 ````
 npm install --save pg-promise express express-graphql graphql dotenv nodemon
@@ -373,13 +376,14 @@ npm run dev
 
 ## GraphiQL 
 
-Use the GraphiQL client by going to:
-
+Our GraphQL server is available through:
 ````
 http://localhost:4000/graphql
 ````
 
-Note the auto-docuemntation (on the right).
+When you navigate to the GraphQL url, the GraphiQL user interface is available.  
+
+Note the auto-docuemntation (on the right).  You can read all queries and mutations available by this GraphQL server.
 
 Query Author:
 
@@ -399,10 +403,11 @@ Query Author:
 }
 ````
 
-* It says, find Author with id '1'.  
+* It says, query Author with id '1'.  
 * When found, we want the id, first_name, last_name, and list of books returned.
+* Also, I don't want the book ids, give me the actual book properties too! (i.e. no under fetching)
 * Changing the id will change the user.
-* Changing the properties will allow for not over-fetching data not needed.
+* Limit the properties as needed (i.e. no over fetching).
 * Note, if id doesn't exist, we simply get null! :)
 * Note, if no required id parameter is provided - it informs in response.
 
