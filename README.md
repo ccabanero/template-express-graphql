@@ -1,26 +1,6 @@
-# GraphQL-snippets
+# template-Express-GraphQL
 
-Notes and snippets for setting up a GraphQL Server and using it with multiple client platforms.
-
-
-## Technology Stack
-
-This solution using the following technology stack:
-
-__Clients__
-
-* GraphiQL
-* React
-	* Apollo Client
-	* apollo-react
-* iOS native app
-	* apollos-ios
-* Android native app
-	* apollo-android
-
-	
-
-
+This repo provides notes and snippets for building a GraphQL server with the following:
 
 __GraphQL Server__
 
@@ -652,17 +632,3 @@ Returns:
 ## Deploying GraphQL server to Heroku
 
 * TODO
- 
-## Using GraphQL with React Web App
-
-* TODO
-
-
-## Using GraphQL with native iOS App
-
-* TODO
-
-## Using GraphQL with native iOS App
-
-* TODO
-
