@@ -660,7 +660,11 @@ The client libraries (for web, iOS, Android) provide more capabilities than just
 
 ## Quick Start
 
-If you've set up this solution previously and just want to run it (e.g. play with different GraphQL client libraries) then:
+* Clone this repo.  Then
+
+````
+npm install
+````
 
 * Ensure that your .env is in your root directory so the solution knows how to point to your DB
 * Then run:
