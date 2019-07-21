@@ -533,7 +533,7 @@ Returns:
 }
 ````
 
-#### Query Book List
+#### Query Book List:
 
 ````
 {
