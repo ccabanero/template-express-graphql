@@ -148,6 +148,7 @@ const BookType = new GraphQLObjectType({
     name: 'Book',
     fields: () => ({
         id: { type: GraphQLInt },
+        author_id: { type: GraphQLInt },
         title: { type: GraphQLString },
         description: { type: GraphQLString },
         image_url: { type: GraphQLString },
@@ -155,7 +156,7 @@ const BookType = new GraphQLObjectType({
             type: AuthorType,
             resolve(parentValue, args) {
                 const query = `SELECT * FROM author WHERE id=$1`;
-                const param = [parentValue.id];
+                const param = [parentValue.author_id];
 
                 return db.one(query, param)
                     .then(res => res)
@@ -176,8 +177,6 @@ const AuthorType = new GraphQLObjectType({
             type: new GraphQLList(BookType),
             resolve(parentValue, args) {
                 const query = `SELECT * FROM book WHERE author_id=$1`;
-                console.log(parentValue);
-                console.log(args);
                 const param = [parentValue.id];
 
                 return db.manyOrNone(query, param)
@@ -207,11 +206,8 @@ const { db } = require("../pgAdaptor");
 const graphql = require('graphql');
 const {
     GraphQLObjectType,
-    GraphQLString,
     GraphQLInt,
-    GraphQLSchema,
-    GraphQLList,
-    GraphQLNonNull
+    GraphQLList
 } = graphql;
 const { AuthorType, BookType } = require("./types");
 
@@ -249,11 +245,24 @@ const RootQuery = new GraphQLObjectType({
                     .then(res => res)
                     .catch(err => err);
             }
+        },
+        books: {
+            type: new GraphQLList(BookType),
+            args: { },
+            resolve(parentValue, args) {
+                const query = 'SELECT * FROM book';
+                const param = [];
+
+                return db.many(query, param)
+                    .then(res => res)
+                    .catch(err => err);
+                }
         }
     }
 });
 
 exports.query = RootQuery;
+
 
 ````
 
@@ -524,7 +533,83 @@ Returns:
 }
 ````
 
-Note: In ChromeDev tools, view network tab to see the POST Request parameters.
+#### Query Book List
+
+````
+{
+  books {
+    id,
+    title,
+    image_url,
+	author {
+      id, 
+      first_name,
+      last_name
+    }
+  }
+}
+````
+
+Returns;
+
+````
+{
+  "data": {
+    "books": [
+      {
+        "id": 1,
+        "title": "Aftermath",
+        "image_url": "http://someurl/aftermath.png",
+        "author": {
+          "id": 1,
+          "first_name": "Chuck",
+          "last_name": "Wendig"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Life Debt",
+        "image_url": "http://someurl/life_debt.png",
+        "author": {
+          "id": 1,
+          "first_name": "Chuck",
+          "last_name": "Wendig"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Empire's End",
+        "image_url": "http://someurl/empires_end.png",
+        "author": {
+          "id": 1,
+          "first_name": "Chuck",
+          "last_name": "Wendig"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Ahsoka",
+        "image_url": "http://someurl/ashoka.png",
+        "author": {
+          "id": 2,
+          "first_name": "E. K.",
+          "last_name": "Johnston"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Queen's Shadow",
+        "image_url": "http://someurl/queens_shadow.png",
+        "author": {
+          "id": 2,
+          "first_name": "E. K.",
+          "last_name": "Johnston"
+        }
+      }
+    ]
+  }
+}
+````
 
 #### Custom Objects
 

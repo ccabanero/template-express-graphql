@@ -13,6 +13,7 @@ const BookType = new GraphQLObjectType({
     name: 'Book',
     fields: () => ({
         id: { type: GraphQLInt },
+        author_id: { type: GraphQLInt },
         title: { type: GraphQLString },
         description: { type: GraphQLString },
         image_url: { type: GraphQLString },
@@ -20,7 +21,7 @@ const BookType = new GraphQLObjectType({
             type: AuthorType,
             resolve(parentValue, args) {
                 const query = `SELECT * FROM author WHERE id=$1`;
-                const param = [parentValue.id];
+                const param = [parentValue.author_id];
 
                 return db.one(query, param)
                     .then(res => res)
@@ -41,8 +42,6 @@ const AuthorType = new GraphQLObjectType({
             type: new GraphQLList(BookType),
             resolve(parentValue, args) {
                 const query = `SELECT * FROM book WHERE author_id=$1`;
-                console.log(parentValue);
-                console.log(args);
                 const param = [parentValue.id];
 
                 return db.manyOrNone(query, param)

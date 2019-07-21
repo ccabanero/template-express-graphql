@@ -2,7 +2,8 @@ const { db } = require("../pgAdaptor");
 const graphql = require('graphql');
 const {
     GraphQLObjectType,
-    GraphQLInt
+    GraphQLInt,
+    GraphQLList
 } = graphql;
 const { AuthorType, BookType } = require("./types");
 
@@ -40,6 +41,18 @@ const RootQuery = new GraphQLObjectType({
                     .then(res => res)
                     .catch(err => err);
             }
+        },
+        books: {
+            type: new GraphQLList(BookType),
+            args: { },
+            resolve(parentValue, args) {
+                const query = 'SELECT * FROM book';
+                const param = [];
+
+                return db.many(query, param)
+                    .then(res => res)
+                    .catch(err => err);
+                }
         }
     }
 });
