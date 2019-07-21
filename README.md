@@ -20,6 +20,9 @@ GraphQL is not opinionated on what database (RDBMS or NoSQL) you use.  In this t
 First, create some basic tables.
 
 ````
+DROP TABLE IF EXISTS book;
+DROP TABLE IF EXISTS author;
+
 CREATE TABLE author(
 	ID serial PRIMARY KEY,
     first_name VARCHAR(40),
@@ -31,34 +34,33 @@ VALUES ('Chuck', 'Wendig');
 
 INSERT INTO author (first_name, last_name)
 VALUES ('E. K.', 'Johnston');
-````
 
-````
 CREATE TABLE book(
 	ID serial PRIMARY KEY,
 	author_id integer NOT NULL,
 	title VARCHAR (100),
 	description VARCHAR (2500),
-	image_url VARCHAR (255),
+	image_detail VARCHAR (150),
+	image_thumb VARCHAR (150),
 	CONSTRAINT fk_book_author
 		FOREIGN KEY (author_id)
 		REFERENCES author (ID)
 );
 
-INSERT INTO book (author_id, title, description, image_url)
-VALUES (1, 'Aftermath', 'As the Empire reels from its critical defeats at the Battle of Endor, the Rebel Alliance - now a fledgling New Republic - presses its advantage by hunting down the enemy''s scattered forces before they can regroup and retaliate.', 'http://someurl/aftermath.png');
+INSERT INTO book (author_id, title, description, image_detail, image_thumb)
+VALUES (1, 'Aftermath', 'As the Empire reels from its critical defeats at the Battle of Endor, the Rebel Alliance - now a fledgling New Republic - presses its advantage by hunting down the enemy''s scattered forces before they can regroup and retaliate.', 'aftermath_detail.jpg', 'aftermath_thumb.jpg');
 
-INSERT INTO book (author_id, title, description, image_url)
-VALUES (1, 'Life Debt', 'The Emperor is dead, and the remnants of his former Empire are in retreat. As the New Republic fights to restore a lasting peace to the galaxy, some dare to imagine new beginnings and new destinies.  For Han Solo ...', 'http://someurl/life_debt.png');
+INSERT INTO book (author_id, title, description, image_detail, image_thumb)
+VALUES (1, 'Life Debt', 'The Emperor is dead, and the remnants of his former Empire are in retreat. As the New Republic fights to restore a lasting peace to the galaxy, some dare to imagine new beginnings and new destinies.  For Han Solo ...', 'aftermath_life_debt_detail.jpg', 'aftermath_life_debt_thumb.jpg');
 
-INSERT INTO book (author_id, title, description, image_url)
-VALUES (1, 'Empire''s End', 'The Battle of Endor shattered the Empire, scattering its remaining forces across the galaxy. But the months following the Rebellion''s victory have not been easy. The fledgling New Republic has suffered a devasting attack ...', 'http://someurl/empires_end.png');
+INSERT INTO book (author_id, title, description, image_detail, image_thumb)
+VALUES (1, 'Empire''s End', 'The Battle of Endor shattered the Empire, scattering its remaining forces across the galaxy. But the months following the Rebellion''s victory have not been easy. The fledgling New Republic has suffered a devasting attack ...', 'aftermath_empires_end_detail.jpg', 'aftermath_empires_end_thumb.jpg');
 
-INSERT INTO book (author_id, title, description, image_url)
-VALUES (2, 'Ahsoka', 'Ahsoka Tano, once a loyal Jedi apprentice to Anakin Skywalker, planned to spend her life serving the Jedi Order. But after a heartbreaking betrayal, she turned her back on the Order to forge her own path, knowing Anakin ...', 'http://someurl/ashoka.png');
+INSERT INTO book (author_id, title, description, image_detail, image_thumb)
+VALUES (2, 'Ahsoka', 'Ahsoka Tano, once a loyal Jedi apprentice to Anakin Skywalker, planned to spend her life serving the Jedi Order. But after a heartbreaking betrayal, she turned her back on the Order to forge her own path, knowing Anakin ...', 'ahsoka_detail.jpg', 'ahsoka_thumb.jpg');
 
-INSERT INTO book (author_id, title, description, image_url)
-VALUES (2, 'Queen''s Shadow', 'When Padme Amidala steps down from her position as Queen of Naboo, she is ready to set aside her title and return to life out of the spotlight.  But to her surprise, the new queen asks Padme to continue serving their people ...', 'http://someurl/queens_shadow.png');
+INSERT INTO book (author_id, title, description, image_detail, image_thumb)
+VALUES (2, 'Queen''s Shadow', 'When Padme Amidala steps down from her position as Queen of Naboo, she is ready to set aside her title and return to life out of the spotlight.  But to her surprise, the new queen asks Padme to continue serving their people ...', 'queens_shadow_detail.jpg', 'queens_shadow_thumb.jpg');
 
 ````
 
