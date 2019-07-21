@@ -385,7 +385,7 @@ When you navigate to the GraphQL url, the GraphiQL user interface is available.
 
 Note the auto-docuemntation (on the right).  You can read all queries and mutations available by this GraphQL server.
 
-Query Author:
+#### Query Author:
 
 ````
 {
@@ -445,7 +445,7 @@ Returns:
 }
 ````
 
-Query Book:
+#### Query Book:
 
 ````
 {
@@ -485,8 +485,7 @@ Returns:
 
 Note: In ChromeDev tools, view network tab to see the POST Request parameters.
 
-
-Build custom objects with multiople queries!!!!!!
+#### Custom Objects
 
 ````
 {
@@ -574,7 +573,7 @@ fragment companyDetails on Company {
 }
 ````
 
-Mutate to create a new author:
+#### Mutation - Create New User
 
 ````
 mutation {
@@ -599,7 +598,7 @@ Returns:
 }
 ````
 
-Mutate to delete an author:
+#### Mutation - Delete an Author
 
 ````
 mutation {
@@ -624,6 +623,26 @@ Returns:
   }
 }
 ````
+
+## Under the Hood - its a POST request.
+
+Open Postman and do the following:
+
+* http://localhost:4000/graphql?
+* Content-Type: application/json
+* Request body:
+
+````
+{
+	"query": "{author(id:1) {id, first_name, last_name, books {id,title,description,image_url}}}"
+}
+````
+
+This drives home the point that GraphQL is a 'query language'.   
+
+If a GraphQL server always does a POST, why don't we just make HTTP requests and get the benefit of GraphQL through the query language? 
+
+The client libraries (for web, iOS, Android) provide more capabilities than just doing GraphQL operations (e.g. query, mutations, subscriptions) they also do things like (e.g. self-caching, easy subscriptions, etc.)
 
 ## Unit Testing GraphQL Queries and Mutations
 
