@@ -11,6 +11,25 @@ __Data Store__
 
 * PostgreSQL
 
+## Quickstart
+
+1. Turn on local PostgreSQL and use database scripts below to build database tables.
+2. Clone repo
+3. Add .env file with database connection details (see structure below).
+4. Change into the repo and install dependencies
+
+````
+npm install
+````
+
+5. Run the app
+
+````
+npm run dev
+````
+
+6. Go to GraphiQL by opening Chrome and navigating to: http://localhost:4000/graphql
+
 ## Data Store - PostgreSQL
 
 GraphQL is not opinionated on what database (RDBMS or NoSQL) you use.  In this template, we use PostgreSQL. 
