@@ -449,7 +449,7 @@ Note the auto-docuemntation (on the right).  You can read all queries and mutati
       id,
       title,
       description,
-      image_url
+      image_thumb
     }
   }
 }
@@ -505,7 +505,7 @@ Returns:
     id, 
     title,
     description,
-    image_url,
+    image_thumb,
     author {
       id,
       first_name,
@@ -542,7 +542,7 @@ Returns:
   books {
     id,
     title,
-    image_url,
+    image_thumb,
 	author {
       id, 
       first_name,
@@ -622,7 +622,7 @@ Returns;
         id,
         title,
         description,
-        image_url
+        image_thumb
     }
   },
   johnston: author(id:2){
@@ -630,7 +630,7 @@ Returns;
         id,
         title,
         description,
-        image_url 
+        image_thumb
     }
   }
 }
